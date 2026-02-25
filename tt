@@ -1,0 +1,40 @@
+📦 Installing Gemini (Google Generative AI CLI)...
+npm notice Access token expired or revoked. Please try logging in again.
+npm notice Access token expired or revoked. Please try logging in again.
+npm ERR! code E404
+npm ERR! 404 Not Found - GET https://registry.npmjs.org/@google%2fgenerative-ai-cli - Not found
+npm ERR! 404 
+npm ERR! 404  '@google/generative-ai-cli@*' is not in this registry.
+npm ERR! 404 
+npm ERR! 404 Note that you can also install from a
+npm ERR! 404 tarball, folder, http url, or git url.
+
+npm ERR! A complete log of this run can be found in: /root/.npm/_logs/2026-02-25T02_53_43_999Z-debug-0.log
+⚠️  Could not detect gemini binary after install; please check the package's bin names.
+
+added 5 packages in 5s
+
+4 packages are looking for funding
+  run `npm fund` for details
+Reshimming mise 20.11.1...
+⚠️  'claude-code' not found after installing @anthropic-ai/claude-code. Verify the package provides the expected binary.
+info found chezmoi version 2.69.4 for latest/linux/amd64
+info found glibc version 2.39
+info installed bin/chezmoi
+bash: command not found: chezmoi
+⚠️  chezmoi init failed; you may want to run 'chezmoi init --apply <repo>' manually.
+
+✅ Full Polyglot Dev Environment Installed!
+
+Installed:
+ - Modern C++ (clang, gcc, cmake, ninja, ccache)
+ - Python + dev tools
+ - Node.js + dev tools
+ - Java + Maven/Gradle
+ - Gemini CLI
+ - Claude Code CLI
+ - Neovim
+ - Starship prompt
+ - Dual shell support (bash + zsh)
+
+Restart your terminal to finalize shims and shell activation.

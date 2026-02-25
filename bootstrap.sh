@@ -3,6 +3,20 @@ set -euo pipefail
 
 echo "🚀 Starting Full Polyglot Dev Bootstrap (mise + shims fixed)..."
 
+# Container/CI compatibility: Ensure sudo exists or we are root
+if ! command -v sudo &> /dev/null; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo "⚠️  Running as root without sudo. Installing sudo for compatibility..."
+    apt-get update && apt-get install -y sudo
+  else
+    echo "❌ Error: This script requires 'sudo' or root privileges."
+    exit 1
+  fi
+fi
+
+# Prevent interactive prompts during apt installation
+export DEBIAN_FRONTEND=noninteractive
+
 ############################################
 # 1️⃣ Base System Packages
 ############################################
@@ -57,19 +71,14 @@ fi
 # 4️⃣ Activate mise in current session
 ############################################
 echo "🔧 Activating mise for this shell..."
-case "$SHELL" in
-  */zsh)
-    eval "$(mise activate zsh)"
-    ;;
-  *)
-    eval "$(mise activate bash)"
-    ;;
-esac
+eval "$(mise activate bash)"
 
 ############################################
 # 5️⃣ Install Tool Versions
 ############################################
 echo "📦 Installing language runtimes..."
+# Ensure LTS node is installed (required for tool installation steps below)
+mise install node@lts
 mise install
 
 ############################################
@@ -88,14 +97,14 @@ grep -qxF 'export CXX="ccache g++"' ~/.config/shell/exports.sh 2>/dev/null || \
 ############################################
 # 7️⃣ Python Dev Tools
 ############################################
-mise exec python -- pip install --upgrade pip
-mise exec python -- pip install black ruff debugpy
+mise exec python -- pip install --upgrade pip --root-user-action=ignore
+mise exec python -- pip install black ruff debugpy --root-user-action=ignore
 
 ############################################
 # 8️⃣ Node Dev Tools
 ############################################
 mise exec node -- corepack enable || true
-mise exec node -- npm install -g typescript eslint prettier
+mise exec node -- npm install -g typescript eslint prettier --unsafe-perm --loglevel error
 
 ############################################
 # 9️⃣ Java Build Tools
@@ -122,17 +131,19 @@ fi
 # 12️⃣ Gemini CLI
 ############################################
 if ! command -v gemini &> /dev/null; then
-  echo "📦 Installing Gemini (Google Generative AI CLI)..."
-  mise exec node -- npm install -g @google/generative-ai-cli || true
+  echo "📦 Installing Gemini CLI..."
+  # Installing gemini cli package using LTS node to satisfy engine requirements
+  mise exec node@lts -- npm install -g gemini-cli --unsafe-perm --loglevel error || true
+  mise reshim
 
   # Ensure local bin exists for a shim
   mkdir -p "$HOME/.local/bin"
 
   # Discover the global npm bin dir for mise's node and create a shim named 'gemini'
-  BIN_DIR="$(mise exec node -- npm bin -g 2>/dev/null || true)"
+  BIN_DIR="$(mise exec node@lts -- npm prefix -g 2>/dev/null)/bin"
   GEMINI_LINK_CREATED=0
   if [ -n "$BIN_DIR" ] && [ -d "$BIN_DIR" ]; then
-    CANDS=(gemini generative-ai-cli generative-ai google-generative-ai generative-ai)
+    CANDS=(gemini gemini-cli gemini-chat generative-ai-cli generative-ai google-generative-ai)
     for b in "${CANDS[@]}"; do
       if [ -x "$BIN_DIR/$b" ]; then
         ln -sf "$BIN_DIR/$b" "$HOME/.local/bin/gemini"
@@ -168,10 +179,11 @@ fi
 ############################################
 # 13️⃣ Claude Code CLI
 ############################################
-if ! command -v claude-code &> /dev/null; then
-  mise exec node -- npm install -g @anthropic-ai/claude-code || true
-  if ! command -v claude-code &> /dev/null; then
-    echo "⚠️  'claude-code' not found after installing @anthropic-ai/claude-code. Verify the package provides the expected binary."
+if ! command -v claude &> /dev/null; then
+  mise exec node -- npm install -g @anthropic-ai/claude-code --unsafe-perm --loglevel error || true
+  mise reshim
+  if ! command -v claude &> /dev/null; then
+    echo "⚠️  'claude' binary not found after installing @anthropic-ai/claude-code."
   fi
 fi
 
@@ -179,25 +191,40 @@ fi
 # 14️⃣ Install chezmoi + Apply Dotfiles
 ############################################
 if ! command -v chezmoi &> /dev/null; then
-  sh -c "$(curl -fsLS get.chezmoi.io)"
+  # Install specifically to ~/.local/bin so it is in PATH
+  sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 fi
+
+# Fix "dubious ownership" error when running in containers/mounts
+git config --global --add safe.directory "*"
+
 # Initialize chezmoi from the current working directory explicitly
 chezmoi init --apply "${PWD}" || echo "⚠️  chezmoi init failed; you may want to run 'chezmoi init --apply <repo>' manually."
 
 ############################################
 # 15️⃣ Permanent Mise Activation (bash + zsh)
 ############################################
-# Ensure exports file exists and contains mise activation
-mkdir -p ~/.config/shell
-touch ~/.config/shell/exports.sh
-ACTIVATE_LINE='eval "$(mise activate bash)"'
-grep -qxF "$ACTIVATE_LINE" ~/.config/shell/exports.sh 2>/dev/null || \
-  echo "$ACTIVATE_LINE" >> ~/.config/shell/exports.sh
+# Add mise activation to .bashrc
+if ! grep -q "mise activate bash" ~/.bashrc 2>/dev/null; then
+  echo 'eval "$(mise activate bash)"' >> ~/.bashrc
+  echo 'eval "$(starship init bash)"' >> ~/.bashrc
+fi
+
+# Add mise activation to .zshrc
+if ! grep -q "mise activate zsh" ~/.zshrc 2>/dev/null; then
+  echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
+  echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+fi
 
 # Also add shims path to exports.sh if missing
+mkdir -p ~/.config/shell
+touch ~/.config/shell/exports.sh
 SHIM_LINE='export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"'
 grep -qxF "$SHIM_LINE" ~/.config/shell/exports.sh 2>/dev/null || \
   echo "$SHIM_LINE" >> ~/.config/shell/exports.sh
+
+# Set global Node.js default to LTS (ensures modern runtime for new shells)
+mise use --global node@lts
 
 ############################################
 # 16️⃣ Set Default Shell
@@ -227,4 +254,11 @@ echo " - Neovim"
 echo " - Starship prompt"
 echo " - Dual shell support (bash + zsh)"
 echo ""
-echo "Restart your terminal to finalize shims and shell activation."
+
+echo "🔄 Reloading shell environment..."
+# Replace current shell with zsh (if installed) or bash to apply changes immediately
+if command -v zsh >/dev/null; then
+  exec zsh -l
+else
+  exec bash -l
+fi
