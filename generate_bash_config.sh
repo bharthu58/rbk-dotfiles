@@ -140,4 +140,8 @@ alias gd='git diff'
 # --- Utils ---
 alias reload='source ~/.bashrc'
 alias path='echo -e ${PATH//:/\\n}'
+
+# --- RBK Aliases ---
+alias cls='clear'
+
 EOF

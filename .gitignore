@@ -1,0 +1,7 @@
+# Ignore binaries
+bin/
+
+# Ignore generated config files
+dot_bash_profile
+dot_bashrc
+dot_bash_aliases

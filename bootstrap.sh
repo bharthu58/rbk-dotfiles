@@ -198,12 +198,19 @@ fi
 # Fix "dubious ownership" error when running in containers/mounts
 git config --global --add safe.directory "*"
 
+# Initialize chezmoi (copies repo to ~/.local/share/chezmoi)
+chezmoi init "${PWD}" || true
+
 if [ -f "./generate_bash_config.sh" ]; then
   source ./generate_bash_config.sh
 fi
 
-# Initialize chezmoi from the current working directory explicitly
-chezmoi init --apply "${PWD}" || echo "⚠️  chezmoi init failed; you may want to run 'chezmoi init --apply <repo>' manually."
+# Move generated configs to chezmoi source and apply
+mv dot_bash_profile dot_bashrc dot_bash_aliases "$(chezmoi source-path)/" 2>/dev/null || true
+chezmoi apply || echo "⚠️  chezmoi apply failed"
+
+# Cleanup generated temporary dotfiles
+rm -f dot_bash_profile dot_bashrc dot_bash_aliases
 
 ############################################
 # 15️⃣ Permanent Mise Activation (bash + zsh)
@@ -231,17 +238,6 @@ grep -qxF "$SHIM_LINE" ~/.config/shell/exports.sh 2>/dev/null || \
 mise use --global node@lts
 
 ############################################
-# 16️⃣ Set Default Shell
-############################################
-if command -v chsh &> /dev/null; then
-  if [ "$SHELL" != "$(which zsh)" ]; then
-    chsh -s "$(which zsh)" || echo "⚠️  chsh failed; you may need to change your login shell manually."
-  fi
-else
-  echo "⚠️  'chsh' not available; skipping default shell change."
-fi
-
-############################################
 # ✅ Done
 ############################################
 echo ""
@@ -260,9 +256,5 @@ echo " - Dual shell support (bash + zsh)"
 echo ""
 
 echo "🔄 Reloading shell environment..."
-# Replace current shell with zsh (if installed) or bash to apply changes immediately
-if command -v zsh >/dev/null; then
-  exec zsh -l
-else
-  exec bash -l
-fi
+# Replace current shell with bash to apply changes immediately
+exec bash -l
