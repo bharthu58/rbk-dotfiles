@@ -18,5 +18,6 @@ docker run --rm -it \
   -v "$REPO_ROOT:/root/dotfiles" \
   $GEMINI_MOUNT \
   -w /root/dotfiles \
+  -e TEST_MODE=true \
   ubuntu:latest \
-  bash bootstrap.sh
+  bash -c "bash bootstrap.sh && bash verify-bs.sh; exec bash -l"

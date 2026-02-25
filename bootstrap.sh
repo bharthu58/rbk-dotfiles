@@ -257,4 +257,6 @@ echo ""
 
 echo "🔄 Reloading shell environment..."
 # Replace current shell with bash to apply changes immediately
-exec bash -l
+if [ -z "${TEST_MODE:-}" ]; then
+  exec bash -l
+fi
