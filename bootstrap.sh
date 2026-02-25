@@ -198,6 +198,10 @@ fi
 # Fix "dubious ownership" error when running in containers/mounts
 git config --global --add safe.directory "*"
 
+if [ -f "./generate_bash_config.sh" ]; then
+  source ./generate_bash_config.sh
+fi
+
 # Initialize chezmoi from the current working directory explicitly
 chezmoi init --apply "${PWD}" || echo "⚠️  chezmoi init failed; you may want to run 'chezmoi init --apply <repo>' manually."
 
