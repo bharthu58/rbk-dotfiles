@@ -133,7 +133,7 @@ fi
 if ! command -v gemini &> /dev/null; then
   echo "📦 Installing Gemini CLI..."
   # Installing gemini cli package using LTS node to satisfy engine requirements
-  mise exec node@lts -- npm install -g gemini-cli --unsafe-perm --loglevel error || true
+  mise exec node@lts -- npm install -g @google/gemini-cli --unsafe-perm --loglevel error || true
   mise reshim
 
   # Ensure local bin exists for a shim

@@ -5,3 +5,6 @@ bin/
 dot_bash_profile
 dot_bashrc
 dot_bash_aliases
+
+# Ignore generated files during verification
+*.log
