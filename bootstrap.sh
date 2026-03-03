@@ -78,7 +78,11 @@ eval "$(mise activate bash)"
 ############################################
 echo "📦 Installing language runtimes..."
 # Ensure LTS node is installed (required for tool installation steps below)
-mise install node@lts
+mise use --global node@lts
+# Use precompiled Ruby binaries (faster install, suppresses warning)
+mise settings set ruby.compile false
+mise use --global ruby@latest
+mise use --global uv@latest
 mise install
 
 ############################################
@@ -107,6 +111,11 @@ mise exec node -- corepack enable || true
 mise exec node -- npm install -g typescript eslint prettier --unsafe-perm --loglevel error
 
 ############################################
+# 🛠️ Ruby Dev Tools
+############################################
+mise exec ruby -- gem install bundler jekyll
+
+############################################
 # 9️⃣ Java Build Tools
 ############################################
 sudo apt install -y maven gradle
@@ -121,6 +130,9 @@ fi
 ############################################
 # 11️⃣ Neovim
 ############################################
+# Install standard Vim
+sudo apt install -y vim
+
 if ! command -v nvim &> /dev/null; then
   sudo add-apt-repository ppa:neovim-ppa/unstable -y
   sudo apt update
@@ -234,9 +246,6 @@ SHIM_LINE='export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"'
 grep -qxF "$SHIM_LINE" ~/.config/shell/exports.sh 2>/dev/null || \
   echo "$SHIM_LINE" >> ~/.config/shell/exports.sh
 
-# Set global Node.js default to LTS (ensures modern runtime for new shells)
-mise use --global node@lts
-
 ############################################
 # ✅ Done
 ############################################
@@ -247,6 +256,8 @@ echo "Installed:"
 echo " - Modern C++ (clang, gcc, cmake, ninja, ccache)"
 echo " - Python + dev tools"
 echo " - Node.js + dev tools"
+echo " - Ruby (latest) + Bundler + Jekyll"
+echo " - uv (Python package manager)"
 echo " - Java + Maven/Gradle"
 echo " - Gemini CLI"
 echo " - Claude Code CLI"

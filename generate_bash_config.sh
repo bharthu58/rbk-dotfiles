@@ -111,8 +111,11 @@ alias cp='cp -i'
 alias mv='mv -i'
 
 # --- Modern Tool Replacements ---
-# Use neovim if installed
-if command -v nvim &> /dev/null; then
+# Use vim as default if installed
+if command -v vim &> /dev/null; then
+  alias vi='vim'
+# Fallback to neovim if vim is missing
+elif command -v nvim &> /dev/null; then
   alias vim='nvim'
   alias vi='nvim'
 fi
@@ -140,8 +143,14 @@ alias gd='git diff'
 # --- Utils ---
 alias reload='source ~/.bashrc'
 alias path='echo -e ${PATH//:/\\n}'
-
-# --- RBK Aliases ---
 alias cls='clear'
 
+# --- RBK Aliases ---  ADJUST the following aliases to your needs as it has RBK's specific aliases.
+alias repo='cd ~/repos'
+alias dot='cd ~/repos/github/rbk-dotfiles'
+alias rbk='cd ~/repos/github/bharthu58.github.io'
+alias ai='cd ~/repos/github/rbk-ai-projects'
+alias app='cd ~/repos/github/rbk-cpp-projects'
+alias py='cd ~/repos/github/rbk-python-projects'
+alias web='cd ~/repos/github/rbk-web-projects'
 EOF

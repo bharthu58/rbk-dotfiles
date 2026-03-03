@@ -86,6 +86,8 @@ check_cmd node "Node.js"
 check_cmd python "Python"
 check_cmd java "Java"
 check_cmd cmake "CMake"
+check_cmd ruby "Ruby"
+check_cmd uv "uv"
 
 # 3. C++ Toolchain
 echo -e "\n[C++ Toolchain]"
@@ -107,12 +109,16 @@ check_cmd ruff
 check_cmd tsc "TypeScript"
 check_cmd eslint
 check_cmd prettier
+# Ruby
+check_cmd bundle "Bundler"
+check_cmd jekyll "Jekyll"
 # Java
 check_cmd mvn "Maven"
 check_cmd gradle
 
 # 5. Editors & Shell
 echo -e "\n[Editors & Shell]"
+check_cmd vim "Vim"
 check_cmd nvim "Neovim"
 check_cmd starship
 
